@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, ArrowRight, Home, RotateCcw, CheckCircle, AlertTriangle, Info } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Home, RotateCcw, CheckCircle, Info } from 'lucide-react';
 import { DecisionTree, DecisionNode, NavigationHistory, Device } from '../types';
 
 interface DecisionTreeNavigatorProps {

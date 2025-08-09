@@ -165,9 +165,15 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           return;
         }
 
+        // Ensure a device is selected for import
+        if (!importingDeviceId) {
+          setImportError('No device selected for import.');
+          return;
+        }
+
         // Create the decision tree
         const newDecisionTree: DecisionTree = {
-          deviceId: importingDeviceId!,
+          deviceId: importingDeviceId,
           rootNodeId: parsedData.rootNodeId,
           nodes: parsedData.nodes
         };
@@ -175,7 +181,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         // Update the decision trees
         const updatedTrees = {
           ...decisionTrees,
-          [importingDeviceId!]: newDecisionTree
+          [importingDeviceId]: newDecisionTree
         };
 
         onUpdateDecisionTrees(updatedTrees);
