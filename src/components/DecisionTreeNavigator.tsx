@@ -129,16 +129,29 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
         <div className="space-y-4">
           {currentNode.options.map((option) => {
             const hasSolution = option.solution;
-            
+            const isInteractive = Boolean(option.nextNodeId);
+
+            const baseStyles =
+              'w-full p-6 text-left rounded-xl border-2 transition-all duration-200';
+            const colorStyles = hasSolution
+              ? 'border-green-200 bg-green-50'
+              : 'border-gray-200 bg-gray-50';
+            const interactiveStyles = isInteractive
+              ? hasSolution
+                ? 'hover:border-green-300 hover:bg-green-100 hover:shadow-md'
+                : 'hover:border-red-900 hover:bg-red-50 hover:shadow-md'
+              : 'opacity-50 cursor-not-allowed';
+
             return (
               <button
                 key={option.id}
-                onClick={() => handleOptionSelect(option.id, option.nextNodeId)}
-                className={`w-full p-6 text-left rounded-xl border-2 transition-all duration-200 hover:shadow-md ${
-                  hasSolution
-                    ? 'border-green-200 bg-green-50 hover:border-green-300 hover:bg-green-100'
-                    : 'border-gray-200 bg-gray-50 hover:border-red-900 hover:bg-red-50'
-                }`}
+                onClick={
+                  isInteractive
+                    ? () => handleOptionSelect(option.id, option.nextNodeId!)
+                    : undefined
+                }
+                disabled={!isInteractive}
+                className={`${baseStyles} ${colorStyles} ${interactiveStyles}`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
@@ -152,7 +165,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
                         {option.text}
                       </span>
                     </div>
-                    
+
                     {option.solution && (
                       <div className="mt-4 p-4 bg-white rounded-lg border border-green-200">
                         <div className="flex items-start space-x-3">
