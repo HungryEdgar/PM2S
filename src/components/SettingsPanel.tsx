@@ -119,16 +119,29 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const handleDeleteDevice = async (deviceId: string) => {
     if (confirm('Are you sure you want to delete this device? This will also remove its associated procedures.')) {
       try {
-        const res = await fetch(`${API_BASE_URL}/devices/${deviceId}`, { method: 'DELETE' });
-        if (res.ok) {
-          const updatedDevices = await res.json();
-          onUpdateDevices(updatedDevices);
+const res = await fetch(`${API_BASE_URL}/devices/${deviceId}`, { method: 'DELETE' });
+if (!res.ok) {
+  alert('Failed to delete device');
+  return;
+}
+const updatedDevices = await res.json();
+onUpdateDevices(updatedDevices);
+
+const treeRes = await fetch(`${API_BASE_URL}/decision-trees/${deviceId}`, { method: 'DELETE' });
+if (!treeRes.ok) {
+  alert('Failed to delete device procedures');
+  return;
+}
+const updatedTrees = await treeRes.json();
+onUpdateDecisionTrees(updatedTrees);
+
         }
-        const treeRes = await fetch(`${API_BASE_URL}/decision-trees/${deviceId}`, { method: 'DELETE' });
-        if (treeRes.ok) {
-          const updatedTrees = await treeRes.json();
-          onUpdateDecisionTrees(updatedTrees);
-        }
+
+        const updatedTrees = await treeRes.json();
+
+        onUpdateDevices(updatedDevices);
+        onUpdateDecisionTrees(updatedTrees);
+        alert('Device deleted successfully');
       } catch {
         alert('Failed to delete device');
       }
