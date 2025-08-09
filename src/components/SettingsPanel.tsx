@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, Edit2, Trash2, Save, Ambulance as Cancel, Upload, FileText } from 'lucide-react';
+import { X, Plus, Edit2, Trash2, Save, XCircle, Upload, FileText } from 'lucide-react';
 import { Device, DecisionTree } from '../types';
 
 interface SettingsPanelProps {
@@ -373,7 +373,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       onClick={handleCancelEdit}
                       className="flex items-center space-x-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
                     >
-                      <Cancel className="h-4 w-4" />
+                      <XCircle className="h-4 w-4" />
                       <span>Cancel</span>
                     </button>
                   </div>
