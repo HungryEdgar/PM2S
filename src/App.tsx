@@ -14,8 +14,11 @@ const STORAGE_KEYS = {
 };
 
 const loadFromStorage = <T,>(key: string, fallback: T): T => {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return fallback;
+  }
   try {
-    const stored = localStorage.getItem(key);
+    const stored = window.localStorage.getItem(key);
     return stored ? JSON.parse(stored) : fallback;
   } catch (error) {
     console.warn(`Failed to load ${key} from localStorage:`, error);
@@ -24,8 +27,11 @@ const loadFromStorage = <T,>(key: string, fallback: T): T => {
 };
 
 const saveToStorage = <T,>(key: string, data: T): void => {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return;
+  }
   try {
-    localStorage.setItem(key, JSON.stringify(data));
+    window.localStorage.setItem(key, JSON.stringify(data));
   } catch (error) {
     console.warn(`Failed to save ${key} to localStorage:`, error);
   }
