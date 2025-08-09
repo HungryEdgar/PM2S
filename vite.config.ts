@@ -7,4 +7,10 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  server: {
+    proxy: {
+      '/devices': 'http://localhost:3001',
+      '/decision-trees': 'http://localhost:3001',
+    },
+  },
 });
