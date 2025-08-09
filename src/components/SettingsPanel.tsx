@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { X, Plus, Edit2, Trash2, Save, XCircle, Upload, FileText } from 'lucide-react';
 import { Device, DecisionTree } from '../types';
 
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || '/';
+const API_BASE_URL = rawBaseUrl.endsWith('/') ? rawBaseUrl.slice(0, -1) : rawBaseUrl;
+
 interface SettingsPanelProps {
   isOpen: boolean;
   onClose: () => void;
@@ -88,7 +91,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     };
 
     try {
-      const res = await fetch('/devices', {
+      const res = await fetch(`${API_BASE_URL}/devices`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newDevice)
@@ -116,12 +119,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const handleDeleteDevice = async (deviceId: string) => {
     if (confirm('Are you sure you want to delete this device? This will also remove its associated procedures.')) {
       try {
-        const res = await fetch(`/devices/${deviceId}`, { method: 'DELETE' });
+        const res = await fetch(`${API_BASE_URL}/devices/${deviceId}`, { method: 'DELETE' });
         if (res.ok) {
           const updatedDevices = await res.json();
           onUpdateDevices(updatedDevices);
         }
-        const treeRes = await fetch(`/decision-trees/${deviceId}`, { method: 'DELETE' });
+        const treeRes = await fetch(`${API_BASE_URL}/decision-trees/${deviceId}`, { method: 'DELETE' });
         if (treeRes.ok) {
           const updatedTrees = await treeRes.json();
           onUpdateDecisionTrees(updatedTrees);
@@ -135,7 +138,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const handleDeleteProcedure = async (deviceId: string) => {
     if (confirm('Are you sure you want to delete this procedure?')) {
       try {
-        const res = await fetch(`/decision-trees/${deviceId}`, { method: 'DELETE' });
+        const res = await fetch(`${API_BASE_URL}/decision-trees/${deviceId}`, { method: 'DELETE' });
         if (res.ok) {
           const updatedTrees = await res.json();
           onUpdateDecisionTrees(updatedTrees);
@@ -191,7 +194,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           nodes: parsedData.nodes
         };
 
-        const res = await fetch('/decision-trees', {
+        const res = await fetch(`${API_BASE_URL}/decision-trees`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newDecisionTree)
