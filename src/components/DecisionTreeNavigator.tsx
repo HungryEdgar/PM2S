@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, ArrowRight, Home, RotateCcw, CheckCircle, AlertTriangle, Info } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Home, RotateCcw, CheckCircle, Info } from 'lucide-react';
 import { DecisionTree, DecisionNode, NavigationHistory, Device } from '../types';
 
 interface DecisionTreeNavigatorProps {
@@ -39,7 +39,19 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
   };
 
   const isTerminalNode = (node: DecisionNode) => {
-    return node.isTerminal || node.options.some(option => option.solution);
+    if (node.isTerminal) {
+      return true;
+    }
+
+    // Only treat a node as terminal if every option directly provides
+    // a solution. This prevents nodes with mixed options (some leading
+    // to another question and others ending) from being flagged as
+    // terminal.
+    if (!node.options || node.options.length === 0) {
+      return false;
+    }
+
+    return node.options.every((option) => Boolean(option.solution));
   };
 
   return (
