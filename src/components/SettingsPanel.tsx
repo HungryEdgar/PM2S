@@ -70,14 +70,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     });
   };
 
-  const handleSaveDevice = () => {
+  const handleSaveDevice = async () => {
     if (!deviceForm.name || !deviceForm.model || !deviceForm.coreDevice || !deviceForm.brandName) {
       alert('Please fill in all required fields');
       return;
     }
 
     const deviceId = deviceForm.id || `${deviceForm.coreDevice.toLowerCase().replace(/\s+/g, '-')}-${deviceForm.brandName.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
-    
+
     const newDevice: Device = {
       id: deviceId,
       name: deviceForm.name,
@@ -87,17 +87,24 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       imageUrl: deviceForm.imageUrl || undefined
     };
 
-    let updatedDevices;
-    if (editingDevice) {
-      updatedDevices = devices.map(d => d.id === editingDevice.id ? newDevice : d);
-    } else {
-      updatedDevices = [...devices, newDevice];
+    try {
+      const res = await fetch('/devices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newDevice)
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        onUpdateDevices(updated);
+        setEditingDevice(null);
+        setIsAddingDevice(false);
+        resetDeviceForm();
+      } else {
+        alert('Failed to save device');
+      }
+    } catch {
+      alert('Failed to save device');
     }
-
-    onUpdateDevices(updatedDevices);
-    setEditingDevice(null);
-    setIsAddingDevice(false);
-    resetDeviceForm();
   };
 
   const handleCancelEdit = () => {
@@ -106,22 +113,36 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     resetDeviceForm();
   };
 
-  const handleDeleteDevice = (deviceId: string) => {
+  const handleDeleteDevice = async (deviceId: string) => {
     if (confirm('Are you sure you want to delete this device? This will also remove its associated procedures.')) {
-      const updatedDevices = devices.filter(d => d.id !== deviceId);
-      const updatedTrees = { ...decisionTrees };
-      delete updatedTrees[deviceId];
-      
-      onUpdateDevices(updatedDevices);
-      onUpdateDecisionTrees(updatedTrees);
+      try {
+        const res = await fetch(`/devices/${deviceId}`, { method: 'DELETE' });
+        if (res.ok) {
+          const updatedDevices = await res.json();
+          onUpdateDevices(updatedDevices);
+        }
+        const treeRes = await fetch(`/decision-trees/${deviceId}`, { method: 'DELETE' });
+        if (treeRes.ok) {
+          const updatedTrees = await treeRes.json();
+          onUpdateDecisionTrees(updatedTrees);
+        }
+      } catch {
+        alert('Failed to delete device');
+      }
     }
   };
 
-  const handleDeleteProcedure = (deviceId: string) => {
+  const handleDeleteProcedure = async (deviceId: string) => {
     if (confirm('Are you sure you want to delete this procedure?')) {
-      const updatedTrees = { ...decisionTrees };
-      delete updatedTrees[deviceId];
-      onUpdateDecisionTrees(updatedTrees);
+      try {
+        const res = await fetch(`/decision-trees/${deviceId}`, { method: 'DELETE' });
+        if (res.ok) {
+          const updatedTrees = await res.json();
+          onUpdateDecisionTrees(updatedTrees);
+        }
+      } catch {
+        alert('Failed to delete procedure');
+      }
     }
   };
 
@@ -142,56 +163,49 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     }
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const content = e.target?.result as string;
         const parsedData = JSON.parse(content);
 
-        // Validate the JSON structure
         if (!parsedData.rootNodeId || !parsedData.nodes) {
           setImportError('Invalid decision tree format. Must contain "rootNodeId" and "nodes" properties.');
           return;
         }
-
-        // Validate that nodes is an object
         if (typeof parsedData.nodes !== 'object' || Array.isArray(parsedData.nodes)) {
           setImportError('Invalid nodes format. "nodes" must be an object.');
           return;
         }
-
-        // Validate that rootNodeId exists in nodes
         if (!parsedData.nodes[parsedData.rootNodeId]) {
           setImportError(`Root node "${parsedData.rootNodeId}" not found in nodes.`);
           return;
         }
-
-        // Ensure a device is selected for import
         if (!importingDeviceId) {
           setImportError('No device selected for import.');
           return;
         }
 
-        // Create the decision tree
         const newDecisionTree: DecisionTree = {
           deviceId: importingDeviceId,
           rootNodeId: parsedData.rootNodeId,
           nodes: parsedData.nodes
         };
 
-        // Update the decision trees
-        const updatedTrees = {
-          ...decisionTrees,
-          [importingDeviceId]: newDecisionTree
-        };
-
-        onUpdateDecisionTrees(updatedTrees);
-        setImportingDeviceId(null);
-        setImportError(null);
-        
-        // Find device name for success message
-        const device = devices.find(d => d.id === importingDeviceId);
-        alert(`Decision tree successfully imported for ${device?.name || 'device'}!`);
-
+        const res = await fetch('/decision-trees', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newDecisionTree)
+        });
+        if (res.ok) {
+          const updatedTrees = await res.json();
+          onUpdateDecisionTrees(updatedTrees);
+          setImportingDeviceId(null);
+          setImportError(null);
+          const device = devices.find(d => d.id === importingDeviceId);
+          alert(`Decision tree successfully imported for ${device?.name || 'device'}!`);
+        } else {
+          setImportError('Failed to save decision tree');
+        }
       } catch (error) {
         setImportError(`Failed to parse JSON file: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
@@ -202,7 +216,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     };
 
     reader.readAsText(file);
-    
+
     // Clear the input value to allow re-importing the same file
     event.target.value = '';
   };

@@ -1,61 +1,39 @@
-import React, { useState } from 'react';
-import { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Settings } from 'lucide-react';
 import { DeviceSelector } from './components/DeviceSelector';
 import { DecisionTreeNavigator } from './components/DecisionTreeNavigator';
 import { SettingsPanel } from './components/SettingsPanel';
 import { devices } from './data/devices';
 import { decisionTrees } from './data/decisionTrees';
-import { Device } from './types';
-
-const STORAGE_KEYS = {
-  DEVICES: 'loreal-tech-support-devices',
-  DECISION_TREES: 'loreal-tech-support-decision-trees'
-};
-
-const loadFromStorage = <T,>(key: string, fallback: T): T => {
-  if (typeof window === 'undefined' || !window.localStorage) {
-    return fallback;
-  }
-  try {
-    const stored = window.localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : fallback;
-  } catch (error) {
-    console.warn(`Failed to load ${key} from localStorage:`, error);
-    return fallback;
-  }
-};
-
-const saveToStorage = <T,>(key: string, data: T): void => {
-  if (typeof window === 'undefined' || !window.localStorage) {
-    return;
-  }
-  try {
-    window.localStorage.setItem(key, JSON.stringify(data));
-  } catch (error) {
-    console.warn(`Failed to save ${key} to localStorage:`, error);
-  }
-};
+import { Device, DecisionTree } from './types';
 
 function App() {
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [currentDevices, setCurrentDevices] = useState(() => 
-    loadFromStorage(STORAGE_KEYS.DEVICES, devices)
-  );
-  const [currentDecisionTrees, setCurrentDecisionTrees] = useState(() => 
-    loadFromStorage(STORAGE_KEYS.DECISION_TREES, decisionTrees)
-  );
+  const [currentDevices, setCurrentDevices] = useState<Device[]>(devices);
+  const [currentDecisionTrees, setCurrentDecisionTrees] = useState<Record<string, DecisionTree>>(decisionTrees);
 
-  // Save devices to localStorage whenever they change
   useEffect(() => {
-    saveToStorage(STORAGE_KEYS.DEVICES, currentDevices);
-  }, [currentDevices]);
-
-  // Save decision trees to localStorage whenever they change
-  useEffect(() => {
-    saveToStorage(STORAGE_KEYS.DECISION_TREES, currentDecisionTrees);
-  }, [currentDecisionTrees]);
+    const fetchData = async () => {
+      try {
+        const [deviceRes, treeRes] = await Promise.all([
+          fetch('/devices'),
+          fetch('/decision-trees')
+        ]);
+        if (deviceRes.ok) {
+          const data = await deviceRes.json();
+          setCurrentDevices(data);
+        }
+        if (treeRes.ok) {
+          const trees = await treeRes.json();
+          setCurrentDecisionTrees(trees);
+        }
+      } catch (err) {
+        console.warn('Failed to load data from server', err);
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleDeviceSelect = (device: Device) => {
     setSelectedDevice(device);

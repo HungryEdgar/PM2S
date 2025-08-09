@@ -1,0 +1,38 @@
+{
+  "hair-dryer-pro-2024": {
+    "deviceId": "hair-dryer-pro-2024",
+    "rootNodeId": "initial-problem",
+    "nodes": {
+      "initial-problem": {
+        "id": "initial-problem",
+        "question": "What type of issue is the customer experiencing?",
+        "options": [
+          { "id": "power-issue", "text": "Device won't turn on", "nextNodeId": "check-outlet" },
+          { "id": "heat-issue", "text": "Not heating", "solution": "Clean filters", "isTerminal": true }
+        ]
+      },
+      "check-outlet": {
+        "id": "check-outlet",
+        "question": "Is the device plugged into a working outlet?",
+        "options": [
+          { "id": "outlet-yes", "text": "Yes", "solution": "Internal fault - service required", "isTerminal": true },
+          { "id": "outlet-no", "text": "No", "solution": "Try another outlet", "isTerminal": true }
+        ]
+      }
+    }
+  },
+  "straightener-elite-x1": {
+    "deviceId": "straightener-elite-x1",
+    "rootNodeId": "straightener-initial",
+    "nodes": {
+      "straightener-initial": {
+        "id": "straightener-initial",
+        "question": "What issue is the customer experiencing with their straightener?",
+        "options": [
+          { "id": "not-heating", "text": "Device not heating up", "solution": "Check power supply", "isTerminal": true },
+          { "id": "plates-sticking", "text": "Plates are sticky", "solution": "Clean plates", "isTerminal": true }
+        ]
+      }
+    }
+  }
+}
